@@ -30,6 +30,20 @@ final readonly class Software
     ) {}
 
     /**
+     * Whether any of the affected ranges contains the version.
+     */
+    public function affects(string $version): bool
+    {
+        foreach ($this->affectedVersions as $range) {
+            if ($range->contains($version)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @internal
      */
     public static function fromFields(Fields $fields): self
