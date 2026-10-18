@@ -1,0 +1,23 @@
+{
+    "id": "848ccbdc-c6f1-480f-a272-cd459e706713",
+    "title": "Example Plugin <= 1.2.3 - Reflected Cross-Site Scripting",
+    "software": [
+        {
+            "type": "plugin",
+            "name": "Example Plugin",
+            "slug": "example",
+            "affected_versions": {
+                "1.0.0 - 1.2.3": {"from_version": "1.0.0", "from_inclusive": true, "to_version": "1.2.3", "to_inclusive": true}
+            },
+            "patched": true,
+            "patched_versions": ["1.2.4"]
+        }
+    ],
+    "informational": false,
+    "references": ["https://www.wordfence.com/threat-intel/vulnerabilities/id/848ccbdc-c6f1-480f-a272-cd459e706713"],
+    "published": "1998-01-09 00:00:00",
+    "copyrights": {
+        "message": "This record contains material that is subject to copyright",
+        "defiant": {"notice": "Copyright Defiant Inc.", "license": "Shortened license.", "license_url": "https://www.wordfence.com/wti-community-edition-terms-and-conditions/"}
+    }
+}

@@ -1,0 +1,34 @@
+{
+    "id": "00000000-0000-0000-0000-000000000001",
+    "title": "Test Plugin <= 1.0 - Missing Authorization",
+    "software": [
+        {
+            "id": "00000000-0000-0000-0000-000000000000",
+            "type": "plugin",
+            "name": "Test Plugin",
+            "slug": "test-plugin",
+            "affected_versions": {
+                "* - 1.0.0": {"from_version": "*", "from_inclusive": true, "to_version": "1.0.", "to_inclusive": true}
+            },
+            "patched": false,
+            "patched_versions": [],
+            "remediation": "No known patch available."
+        }
+    ],
+    "description": "Short description written for the tests.",
+    "references": ["https://www.wordfence.com/threat-intel/vulnerabilities/id/00000000-0000-0000-0000-000000000001"],
+    "cwe": {"id": 284, "name": "Improper Access Control", "description": null},
+    "cvss": {"vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:C/C:L/I:L/A:N", "score": 5.5, "rating": "Medium"},
+    "cve": "0000-0001",
+    "cve_link": "https://www.cve.org/CVERecord?id=CVE-0000-0001",
+    "researchers": ["wordfence"],
+    "published": "2023-01-01T00:00:00.000000Z",
+    "updated": "2023-01-02T03:04:05.123456Z",
+    "copyrights": {
+        "message": "This record contains material that is subject to copyright",
+        "copyrights": [
+            {"notice": "Copyright Defiant Inc.", "license": "Shortened license.", "license_url": "https://www.wordfence.com/wordfence-intelligence-terms-and-conditions/"},
+            {"notice": "Copyright The MITRE Corporation", "license": "Shortened license.", "license_url": "https://www.cve.org/Legal/TermsOfUse"}
+        ]
+    }
+}

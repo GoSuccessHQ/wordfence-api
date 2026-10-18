@@ -1,0 +1,37 @@
+{
+    "id": "848ccbdc-c6f1-480f-a272-cd459e706713",
+    "title": "Example Plugin <= 1.2.3 - Reflected Cross-Site Scripting",
+    "software": [
+        {
+            "type": "plugin",
+            "name": "Example Plugin",
+            "slug": "example",
+            "affected_versions": {
+                "1.0.0 - 1.2.3": {
+                    "from_version": "1.0.0",
+                    "from_inclusive": true,
+                    "to_version": "1.2.3",
+                    "to_inclusive": true
+                }
+            },
+            "patched": true,
+            "patched_versions": ["1.2.4"],
+            "remediation": "Update to version 1.2.4 or later."
+        }
+    ],
+    "informational": false,
+    "description": "Short description written for the tests.",
+    "references": ["https://www.wordfence.com/threat-intel/vulnerabilities/id/848ccbdc-c6f1-480f-a272-cd459e706713"],
+    "cwe": {"id": 79, "name": "Cross-site Scripting", "description": "Shortened."},
+    "cvss": {"vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N", "score": 6.1, "rating": "Medium"},
+    "cve": "CVE-2026-0001",
+    "cve_link": "https://www.cve.org/CVERecord?id=CVE-2026-0001",
+    "researchers": ["A. Researcher"],
+    "published": "1998-01-09 00:00:00",
+    "updated": "2026-10-18 14:05:09",
+    "copyrights": {
+        "message": "This record contains material that is subject to copyright",
+        "defiant": {"notice": "Copyright Defiant Inc.", "license": "Shortened license.", "license_url": "https://www.wordfence.com/wti-community-edition-terms-and-conditions/"},
+        "mitre": {"notice": "Copyright The MITRE Corporation", "license": "Shortened license.", "license_url": "https://www.cve.org/Legal/TermsOfUse"}
+    }
+}
