@@ -53,8 +53,17 @@ foreach ($wordfence->production() as $uuid => $vulnerability) {
 
 `production()` and `scanner()` are generators: the download starts with the
 first iteration, so errors are thrown while iterating, not when the method is
-called. Stopping early (`break`) is fine; the temporary file is removed in any
-case.
+called. Stopping early (`break`) is fine. The temporary file's name is removed as
+soon as reading starts (the client reads from the open handle) and after a failed
+download; only a process killed during the download itself can leave a
+`wordfence-*` file in the temp dir.
+
+Records arrive one by one, so a defect later in the document is thrown only after
+the records before it were yielded. If you mirror the feed, apply anything that
+depends on the whole feed (such as deleting records that are no longer in it)
+only after the iteration finished without an exception. One malformed record
+stops the feed rather than being skipped silently; a value Wordfence adds later
+(e.g. a new software type) therefore needs a package update.
 
 ## Rate limit
 
@@ -130,7 +139,7 @@ Every exception implements `GoSuccess\Wordfence\Exception\WordfenceException`.
 | `ServerException` | `5xx` after the retries |
 | other `ApiException` subclasses | other error statuses |
 | `TransportException` | network failure after the retries |
-| `SerializationException` | the document or a record is malformed; the message names the field path or byte offset, never content |
+| `SerializationException` | the document or a record is malformed; the message names the field path or byte offset, never the body itself (a path may contain a version label such as `affected_versions["1.0 - 2.0"]`) |
 | `InvalidSignatureException` | a webhook whose signature does not match |
 
 ## Configuration and custom transport

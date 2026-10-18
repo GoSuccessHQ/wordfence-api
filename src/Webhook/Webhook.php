@@ -55,7 +55,7 @@ final readonly class Webhook
             $value = $byName[$name] ?? null;
             $value = \is_array($value) ? ($value[0] ?? null) : $value;
 
-            if (\is_string($value) && $value !== '') {
+            if (\is_string($value) && trim($value) !== '') {
                 return $value;
             }
         }

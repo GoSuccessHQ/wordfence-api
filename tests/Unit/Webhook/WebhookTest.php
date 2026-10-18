@@ -68,6 +68,7 @@ final class WebhookTest extends TestCase
         self::assertSame('ghi', Webhook::signatureFrom(['X-WORDFENCE-SIGNATURE' => ['ghi', 'other']]));
         self::assertNull(Webhook::signatureFrom(['Content-Type' => 'application/json']));
         self::assertNull(Webhook::signatureFrom(['X-Signature' => []]));
+        self::assertSame('def', Webhook::signatureFrom(['X-Wordfence-Signature' => '  ', 'X-Signature' => 'def']));
     }
 
     public function testParsesCreatedReplacedAndDeleted(): void

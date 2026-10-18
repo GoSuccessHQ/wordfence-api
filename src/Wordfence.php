@@ -18,14 +18,16 @@ use GoSuccess\Wordfence\Http\StreamingHttpClient;
 use GoSuccess\Wordfence\Model\Vulnerability;
 use RuntimeException;
 use SensitiveParameter;
+use Throwable;
 
 /**
  * Client for the Wordfence Intelligence v3 vulnerability data feed.
  *
  * Both feeds return every known vulnerability in one document. The client
  * downloads it into a temporary file and yields one record at a time, so the
- * feed never sits in memory as a whole; the file is removed when the
- * iteration ends, also on `break` or an exception.
+ * feed never sits in memory as a whole. The file's name is removed as soon as
+ * reading starts and after a failed download; only a process killed during the
+ * download itself can leave a `wordfence-*` file in the temp dir.
  */
 final class Wordfence
 {
@@ -90,6 +92,10 @@ final class Wordfence
                 throw new RuntimeException('Cannot read the downloaded feed.');
             }
 
+            // Read from the handle only: the name goes at once, so nothing stays on
+            // disk however the iteration ends, even if the process is killed.
+            @unlink($path);
+
             try {
                 foreach (new ObjectStreamReader()->entries($stream) as $uuid => $record) {
                     if (!\is_array($record)) {
@@ -133,7 +139,9 @@ final class Wordfence
         );
 
         for ($attempt = 0; ; $attempt++) {
-            $path = tempnam(sys_get_temp_dir(), 'wordfence-');
+            // Silenced: tempnam() notices a fallback to the system temp dir, which a
+            // strict error handler would turn into an exception after creating the file.
+            $path = @tempnam(sys_get_temp_dir(), 'wordfence-');
 
             if ($path === false) {
                 throw new RuntimeException('Cannot create a temporary file for the feed.');
@@ -141,10 +149,10 @@ final class Wordfence
 
             try {
                 $response = $this->httpClient->sendToFile($request, $path);
-            } catch (TransportException $exception) {
+            } catch (Throwable $exception) {
                 @unlink($path);
 
-                if ($attempt >= $this->options->maxRetries) {
+                if (!$exception instanceof TransportException || $attempt >= $this->options->maxRetries) {
                     throw $exception;
                 }
 

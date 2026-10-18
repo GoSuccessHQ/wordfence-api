@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GoSuccess\Wordfence\Tests\Unit\Http;
 
+use ErrorException;
 use GoSuccess\Wordfence\Exception\TransportException;
 use GoSuccess\Wordfence\Http\CurlHttpClient;
 use GoSuccess\Wordfence\Http\Method;
@@ -119,6 +120,35 @@ final class CurlHttpClientTest extends TestCase
         } finally {
             unlink($path);
         }
+    }
+
+    #[RequiresOperatingSystemFamily('Linux')]
+    public function testAFailedWriteIsATransportErrorEvenUnderAStrictErrorHandler(): void
+    {
+        // Like Laravel's HandleExceptions: every reported error becomes an exception;
+        // an error silenced with @ is not reported.
+        set_error_handler(static function (int $severity, string $message): bool {
+            if ((error_reporting() & $severity) === 0) {
+                return false;
+            }
+
+            throw new ErrorException($message, 0, $severity);
+        });
+
+        try {
+            $this->expectException(TransportException::class);
+
+            new CurlHttpClient()->sendToFile(new Request(Method::Get, $this->uri('/echo')), '/dev/full');
+        } finally {
+            restore_error_handler();
+        }
+    }
+
+    public function testOnlyHttpAndHttpsAreFetched(): void
+    {
+        $this->expectException(TransportException::class);
+
+        new CurlHttpClient()->send(new Request(Method::Get, 'file:///etc/hostname'));
     }
 
     public function testReusesTheHandleAcrossRequests(): void

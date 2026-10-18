@@ -92,6 +92,8 @@ final class CurlHttpClient implements StreamingHttpClient
             \CURLOPT_CUSTOMREQUEST => $request->method->value,
             // A redirect could carry the Authorization header to another host.
             \CURLOPT_FOLLOWLOCATION => false,
+            // Never file://, ftp:// or the like, whatever the URI says.
+            \CURLOPT_PROTOCOLS_STR => 'http,https',
             \CURLOPT_ENCODING => '',
             \CURLOPT_HTTPHEADER => $this->formatHeaders($request->headers),
             \CURLOPT_CONNECTTIMEOUT_MS => $this->milliseconds($request->connectTimeout ?? $this->connectTimeout),
@@ -118,8 +120,10 @@ final class CurlHttpClient implements StreamingHttpClient
                     return \strlen($chunk);
                 }
 
-                // A short write aborts the transfer with a cURL error.
-                return (int) fwrite($file, $chunk);
+                // A failed or short write (e.g. a full disk) aborts the transfer with
+                // cURL error 23, a TransportException; silenced so that a strict error
+                // handler does not turn the notice into another exception first.
+                return (int) @fwrite($file, $chunk);
             },
         ];
 

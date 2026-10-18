@@ -20,9 +20,10 @@ final readonly class VersionRange
 
     /**
      * Whether the version lies in the range, compared like WordPress compares
-     * versions (`version_compare`). Trailing zero segments and a trailing dot
-     * do not count (`1.0` equals `1.0.0`, and the bound `1.0.` means `1.0`);
-     * an empty version is never contained.
+     * versions (`version_compare`). Trailing zero segments, also before a
+     * pre-release suffix, and a trailing dot do not count (`1.0` equals `1.0.0`,
+     * `1.0-beta` lies below both, and the bound `1.0.` means `1.0`); an empty
+     * version is never contained.
      */
     public function contains(string $version): bool
     {
@@ -68,6 +69,7 @@ final readonly class VersionRange
     {
         $version = rtrim(trim($version), '.');
 
-        return $version === '' ? '' : (string) preg_replace('/(?<=\d)(?:\.0+)+$/', '', $version);
+        // Zero segments count nowhere before a suffix either, so 1.0-beta stays below 1.0.
+        return $version === '' ? '' : (string) preg_replace('/(?<=\d)(?:\.0+)+(?=$|[^\d.])/', '', $version);
     }
 }

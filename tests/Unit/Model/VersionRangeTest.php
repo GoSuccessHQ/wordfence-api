@@ -40,6 +40,17 @@ final class VersionRangeTest extends TestCase
         yield 'single version, other spelling' => ['1.0', true, '1.0', true, '1.0.0', true];
         yield 'empty version' => ['1.0', true, '2.0', true, '', false];
         yield 'any upper, exclusive flag ignored' => ['1.0', true, '*', false, '99', true];
+        yield 'pre-release below an inclusive bound' => ['*', true, '1.0', true, '1.0-beta', true];
+        yield 'release candidate below the bound' => ['*', true, '1.0', true, '1.0RC1', true];
+        yield 'dev below the bound' => ['*', true, '1.0', true, '1.0-dev', true];
+        yield 'pre-release below an exclusive bound' => ['*', true, '1.0.0', false, '1.0.0-beta', true];
+        yield 'release above a pre-release bound' => ['1.0-beta', true, '*', true, '1.0', true];
+        yield 'release in a range from a pre-release' => ['1.0-beta', true, '2.0', true, '1.0.0', true];
+        yield 'ten is not one' => ['*', true, '1.0', true, '10', false];
+        yield 'patch ten above patch one' => ['*', true, '1.0.1', true, '1.0.10', false];
+        yield 'minor ten above minor one' => ['*', true, '1.1', true, '1.10', false];
+        yield 'patch above a short bound' => ['*', true, '2', true, '2.0.1', false];
+        yield 'four segments' => ['1.0', true, '1.0', true, '1.0.0.0', true];
     }
 
     public function testSoftwareAffectsIfAnyRangeContains(): void

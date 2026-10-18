@@ -17,6 +17,7 @@ use GoSuccess\Wordfence\Tests\Support\MockHttpClient;
 use GoSuccess\Wordfence\Wordfence;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Throwable;
 
 #[CoversClass(Wordfence::class)]
@@ -131,7 +132,8 @@ final class WordfenceTest extends TestCase
         $http = new MockHttpClient(new Response(200, $this->feed()));
 
         foreach ($this->client($http)->production() as $record) {
-            self::assertFileExists($http->files[0]);
+            // The name is gone as soon as reading starts.
+            self::assertFileDoesNotExist($http->files[0]);
 
             break;
         }
@@ -152,6 +154,36 @@ final class WordfenceTest extends TestCase
         self::assertCount(2, $http->files);
         self::assertFileDoesNotExist($http->files[0]);
         self::assertFileDoesNotExist($http->files[1]);
+    }
+
+    public function testTempFileIsRemovedWhenTheTransportThrowsSomethingElse(): void
+    {
+        $http = new MockHttpClient(new Response(200, '{}'));
+        $http->onSend = static function (): void {
+            throw new RuntimeException('disk full');
+        };
+
+        try {
+            iterator_to_array($this->client($http)->production());
+            self::fail('No exception.');
+        } catch (RuntimeException $exception) {
+            self::assertSame('disk full', $exception->getMessage());
+        }
+
+        self::assertCount(1, $http->files);
+        self::assertFileDoesNotExist($http->files[0]);
+    }
+
+    public function testTempFileIsGoneOnceReadingStarts(): void
+    {
+        $http = new MockHttpClient(new Response(200, $this->feed()));
+        $records = $this->client($http)->production();
+
+        // Kept in a variable and never finished, the generator holds no file on disk.
+        $records->current();
+
+        self::assertFileDoesNotExist($http->files[0]);
+        self::assertSame('848ccbdc-c6f1-480f-a272-cd459e706713', $records->key());
     }
 
     public function testKeyIsNotInDebugInfoOrExceptions(): void

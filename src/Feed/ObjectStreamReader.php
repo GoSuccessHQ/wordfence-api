@@ -269,7 +269,8 @@ final class ObjectStreamReader
      */
     private function compact(): void
     {
-        if ($this->position === 0) {
+        // Only once a whole chunk is consumed, so the rest is not copied after every member.
+        if ($this->position < $this->bufferBytes) {
             return;
         }
 
