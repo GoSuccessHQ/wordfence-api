@@ -28,7 +28,8 @@ Both return every known vulnerability and take no parameters. Authentication is
 | production | 42,504 | 158.2 MB | 5.2 s | 3.0 MB above start |
 
 A second download right after the first was refused with `429` and no
-`Retry-After`.
+`Retry-After`; Wordfence warned by mail that continued excess may suspend the
+key. The scanner feed was therefore not measured.
 
 ## Malformed input
 

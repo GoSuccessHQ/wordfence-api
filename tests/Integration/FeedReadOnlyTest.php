@@ -14,24 +14,26 @@ use GoSuccess\Wordfence\Http\Response;
 use GoSuccess\Wordfence\Http\StreamingHttpClient;
 use GoSuccess\Wordfence\Wordfence;
 use PHPUnit\Framework\Attributes\CoversNothing;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use SensitiveParameter;
 
 /**
- * Reads both live feeds once. Needs WORDFENCE_API_KEY; with WORDFENCE_MEASURE=1
- * it also reports records, download size, time and peak memory on STDERR.
+ * Reads ONE live feed, chosen with WORDFENCE_FEED (`production` or `scanner`),
+ * and needs WORDFENCE_API_KEY; without both it is skipped. Never both feeds in
+ * one run: a second full download right after the first exceeds the key's rate
+ * limit, and repeated excess may get the key suspended (Wordfence, 2026-10-18).
+ * With WORDFENCE_MEASURE=1 it reports records, size, time and peak memory.
  */
 #[CoversNothing]
 final class FeedReadOnlyTest extends TestCase
 {
-    #[DataProvider('feeds')]
-    public function testReadsTheWholeFeed(Feed $feed): void
+    public function testReadsTheChosenFeed(): void
     {
         $key = getenv('WORDFENCE_API_KEY');
+        $feed = Feed::tryFrom((string) getenv('WORDFENCE_FEED'));
 
-        if (!\is_string($key) || $key === '') {
-            self::markTestSkipped('WORDFENCE_API_KEY is not set.');
+        if (!\is_string($key) || $key === '' || $feed === null) {
+            self::markTestSkipped('Set WORDFENCE_API_KEY and WORDFENCE_FEED (production or scanner); one feed per run.');
         }
 
         $http = new class implements StreamingHttpClient {
@@ -93,14 +95,5 @@ final class FeedReadOnlyTest extends TestCase
                 (memory_get_peak_usage() - $before) / 1_048_576,
             ));
         }
-    }
-
-    /**
-     * @return iterable<string, array{Feed}>
-     */
-    public static function feeds(): iterable
-    {
-        yield 'production' => [Feed::Production];
-        yield 'scanner' => [Feed::Scanner];
     }
 }

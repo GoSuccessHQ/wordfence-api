@@ -14,7 +14,7 @@
             <directory>tests/Unit</directory>
         </testsuite>
         <!--
-            Reads the live feeds; skipped unless WORDFENCE_API_KEY is set.
+            Reads one live feed; skipped unless WORDFENCE_API_KEY and WORDFENCE_FEED are set.
         -->
         <testsuite name="integration">
             <directory>tests/Integration</directory>

@@ -60,10 +60,12 @@ case.
 
 The API key has a usage limit that Wordfence does not publish. On 2026-10-18 a
 second full download right after the first one was refused with `429` ("API key
-limit exceeded"), without a `Retry-After` header. Download a feed rarely, e.g.
-once a day, and use webhooks for changes in between. The client never retries a
-`429`; it throws `RateLimitException` (with `retryAfter` when the API announces
-it).
+limit exceeded"), without a `Retry-After` header, and Wordfence mailed at once:
+continued requests beyond the limit may get the key **suspended**. Download a
+feed rarely (e.g. once a day, never both feeds back to back), wait long after a
+`429` instead of trying again, and use webhooks for changes in between. The
+client never retries a `429`; it throws `RateLimitException` (with `retryAfter`
+when the API announces it).
 
 ## Webhooks
 
@@ -157,12 +159,13 @@ out of memory.
 
 ```bash
 composer check            # code style, static analysis, unit tests
-composer test:integration # live feeds; needs WORDFENCE_API_KEY
+WORDFENCE_FEED=production composer test:integration # one live feed per run
 ```
 
 Live tests read the key from the environment, e.g. from a `.env` that is never
-committed: `set -a; . ./.env; set +a`. With `WORDFENCE_MEASURE=1` they report
-size, time and memory.
+committed: `set -a; . ./.env; set +a`. They read exactly one feed, chosen with
+`WORDFENCE_FEED`, and are skipped otherwise; do not run them twice in a row (see
+"Rate limit"). With `WORDFENCE_MEASURE=1` they report size, time and memory.
 
 ## License
 
