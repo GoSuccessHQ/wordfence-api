@@ -6,9 +6,9 @@ namespace GoSuccess\Wordfence\Tests\Support;
 
 use Closure;
 use GoSuccess\Wordfence\Exception\TransportException;
-use GoSuccess\Wordfence\Http\HttpClient;
 use GoSuccess\Wordfence\Http\Request;
 use GoSuccess\Wordfence\Http\Response;
+use GoSuccess\Wordfence\Http\StreamingHttpClient;
 use RuntimeException;
 use SensitiveParameter;
 
@@ -16,13 +16,16 @@ use SensitiveParameter;
  * Test double that returns a queue of predefined responses (or throws predefined
  * exceptions) and records every request it received.
  */
-final class MockHttpClient implements HttpClient
+final class MockHttpClient implements StreamingHttpClient
 {
     /** @var list<Response|TransportException> */
     private array $queue;
 
     /** @var list<Request> */
     public array $requests = [];
+
+    /** @var list<string> Files that {@see sendToFile()} wrote to. */
+    public array $files = [];
 
     /**
      * Called for every request before the queued outcome is returned, e.g. to
@@ -56,6 +59,19 @@ final class MockHttpClient implements HttpClient
         }
 
         return $next;
+    }
+
+    /**
+     * Like {@see send()}, but writes the queued body to the file and returns the
+     * response without a body, as the streaming contract demands.
+     */
+    public function sendToFile(#[SensitiveParameter] Request $request, string $path): Response
+    {
+        $this->files[] = $path;
+        $response = $this->send($request);
+        file_put_contents($path, $response->body);
+
+        return new Response($response->statusCode, '', $response->headers, $response->reasonPhrase);
     }
 
     public function callCount(): int

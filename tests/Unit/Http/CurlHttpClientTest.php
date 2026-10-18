@@ -84,6 +84,43 @@ final class CurlHttpClientTest extends TestCase
         self::assertSame('{"errors":[{"status":404,"title":"The server encountered an error processing your request.","detail":"Status 404"}]}', $response->body);
     }
 
+    public function testSendToFileWritesTheBodyIntoTheFile(): void
+    {
+        $path = (string) tempnam(sys_get_temp_dir(), 'wordfence-test-');
+
+        try {
+            $client = new CurlHttpClient();
+            $response = $client->sendToFile(new Request(Method::Get, $this->uri('/echo'), ['X-Probe' => 'yes']), $path);
+            $echo = json_decode((string) file_get_contents($path), true);
+
+            self::assertSame(200, $response->statusCode);
+            self::assertSame('', $response->body);
+            self::assertSame('application/json', $response->header('content-type'));
+            self::assertIsArray($echo);
+            self::assertIsArray($echo['headers']);
+            self::assertSame('yes', $echo['headers']['x-probe']);
+
+            // The handle is reused: a later request returns its body in memory again.
+            self::assertStringContainsString('"method":"GET"', $client->send(new Request(Method::Get, $this->uri('/echo')))->body);
+        } finally {
+            unlink($path);
+        }
+    }
+
+    public function testSendToFileWritesErrorBodiesToo(): void
+    {
+        $path = (string) tempnam(sys_get_temp_dir(), 'wordfence-test-');
+
+        try {
+            $response = new CurlHttpClient()->sendToFile(new Request(Method::Get, $this->uri('/status/404')), $path);
+
+            self::assertSame(404, $response->statusCode);
+            self::assertStringContainsString('Status 404', (string) file_get_contents($path));
+        } finally {
+            unlink($path);
+        }
+    }
+
     public function testReusesTheHandleAcrossRequests(): void
     {
         $client = new CurlHttpClient();

@@ -10,14 +10,14 @@ use GoSuccess\Wordfence\Exception\TransportException;
 use SensitiveParameter;
 
 /**
- * Default {@see HttpClient} built on PHP's cURL extension.
+ * Default {@see StreamingHttpClient} built on PHP's cURL extension.
  *
  * Has no Composer dependencies; only requires `ext-curl`. One instance reuses a
  * single cURL handle, so connections stay alive across requests. On PHP 8.5+ it
  * additionally shares DNS, connection and TLS session caches across requests of
  * the same worker process through a persistent share handle.
  */
-final class CurlHttpClient implements HttpClient
+final class CurlHttpClient implements StreamingHttpClient
 {
     /**
      * Seconds a request without a total time limit may stall (below 1 byte/s)
@@ -56,6 +56,29 @@ final class CurlHttpClient implements HttpClient
 
     public function send(#[SensitiveParameter] Request $request): Response
     {
+        return $this->perform($request, null);
+    }
+
+    public function sendToFile(#[SensitiveParameter] Request $request, string $path): Response
+    {
+        $file = @fopen($path, 'wb');
+
+        if ($file === false) {
+            throw new TransportException("Cannot open {$path} for writing the response body.");
+        }
+
+        try {
+            return $this->perform($request, $file);
+        } finally {
+            fclose($file);
+        }
+    }
+
+    /**
+     * @param resource|null $file Where the body goes; null keeps it in the response.
+     */
+    private function perform(#[SensitiveParameter] Request $request, $file): Response
+    {
         $handle = $this->handle ??= curl_init();
         curl_reset($handle);
 
@@ -88,10 +111,15 @@ final class CurlHttpClient implements HttpClient
 
                 return \strlen($line);
             },
-            \CURLOPT_WRITEFUNCTION => static function (CurlHandle $_handle, string $chunk) use (&$body): int {
-                $body .= $chunk;
+            \CURLOPT_WRITEFUNCTION => static function (CurlHandle $_handle, string $chunk) use (&$body, $file): int {
+                if ($file === null) {
+                    $body .= $chunk;
 
-                return \strlen($chunk);
+                    return \strlen($chunk);
+                }
+
+                // A short write aborts the transfer with a cURL error.
+                return (int) fwrite($file, $chunk);
             },
         ];
 
